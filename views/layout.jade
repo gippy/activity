@@ -1,0 +1,29 @@
+doctype html
+html(lang='cs-CZ')
+	head
+		title Activity Uploads
+		meta(name="viewport", content="width=device-width, initial-scale=1.0")
+		link(rel="stylesheet", href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css")
+		link(rel='stylesheet', href=stylesheet)
+		block stylesheets
+
+	body(class="activity responsive-menu")
+		.menu
+			nav.navigation(role="navigation")
+				.nav-header
+					a.nav-brand(href="/dashboard")
+						span.colored A
+						span ctivity
+				.nav-content
+					if loggedIn
+						ul.nav-items.nav-right
+							li.user-name
+								a(href="/logout") Odhlásit se
+
+			include partials/messages
+
+		.main
+			.container-fluid
+				block content
+
+		block javascripts

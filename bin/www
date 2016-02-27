@@ -1,0 +1,32 @@
+#!/usr/bin/env node
+var fs = require('fs'),
+	env = process.env.NODE_ENV || 'development',
+	config = require('../config/config')[env],
+	app = require('../app'),
+	http = require('http');
+
+var server, secureServer;
+
+if ( !config.secure ) {
+	server = http.createServer(app);
+	server.listen(config.port);
+} else {
+	var https = require('https'),
+		privateKey  = fs.readFileSync(config.secure.key, 'utf8'),
+		certificate = fs.readFileSync(config.secure.crt, 'utf8'),
+		caFile = fs.readFileSync(config.secure.ca, 'utf8'),
+		credentials = { key: privateKey, cert: certificate, ca: caFile };
+
+	var unsecureExpress = require('express'),
+		unsecureApp = unsecureExpress();
+
+	unsecureApp.route('/*').all(function(req, res, next){
+		res.redirect('https://' + config.domain + req.url);
+	});
+
+	server = http.createServer(unsecureApp);
+	secureServer = https.createServer(credentials, app);
+
+	server.listen(config.port);
+	secureServer.listen(config.secure.port);
+}

@@ -1,0 +1,270 @@
+.translation-tree {
+	label{
+		display: block;
+		width: 50%;
+		text-align: left;
+		padding: 5px 20px;
+		margin-bottom: 0;
+	}
+	textarea {
+		width: 50%;
+		padding: 5px 20px;
+		height: 55px;
+	}
+	.leaf {
+		margin-top: 1em;
+	}
+	.title {
+		font-weight: bold;
+	}
+	.branch {
+		&.closed > .items {
+			display: none;
+		}
+		&.closed > .title .fa-minus {
+			display: none;
+		}
+		&.open > .items {
+			display: block;
+		}
+
+		&.open > .title .fa-plus {
+			display: none;
+		}
+
+		.title {
+			cursor: pointer;
+		}
+
+		& > div {
+			padding-left: 50px;
+		}
+	}
+}
+
+.col-sm-0-2 {
+	width: 5%;
+}
+
+.criteria-item {
+	border: 1px solid @color-gray-darker;
+	margin-bottom: 0.5em;
+}
+
+.criteria-condition {
+	position: relative;
+	border-bottom: 1px solid @color-gray-darker;
+	input {
+		background-color: @color-blue;
+		border: none;
+		padding: 0.5em 3em 0.5em 1em;
+		color: white;
+		&::-webkit-input-placeholder  {
+			font-weight: bold;
+			color: white;
+		}
+		&:-moz-placeholder {
+			font-weight: bold;
+			color: white;
+		}
+		&::-moz-placeholder {
+			color: white;
+			font-weight: bold;
+		}
+		&:-ms-input-placeholder {
+			font-weight: bold;
+			color: white;
+		}
+	}
+	button {
+		position: absolute;
+		padding: 0.2em 0.5em;
+		right: 0.5em;
+		top: 4px;
+	}
+}
+
+.criteria-description {
+	textarea {
+		border: none;
+		padding: 0.5em 1em;
+	}
+
+}
+
+.ko-criteria {
+	display: inline-block;
+	max-width: 800px;
+	margin: auto;
+	text-align: left;
+	table td {
+		border: 1px solid #e7e7e7;
+		padding: 20px;
+	}
+	label {
+		font-weight: 400;
+	}
+	.name {
+		color: #00c378;
+	}
+	.item {
+		display: inline-block;
+		clear: both;
+	}
+}
+
+.section-header {
+	font-size: 9px;
+	line-height: 22px;
+	height: 49px;
+	padding: 14px 20px;
+	color: #a0a0a0;
+	text-transform: uppercase;
+	text-align: center;
+}
+
+.text-header {
+	color: #00c378;
+}
+
+.modal.recruitment {
+	border-radius: 5px;
+	.modal-header {
+		padding: 20px;
+		font-weight: 300;
+		color: #00c378;
+		font-size: 30px;
+		border: none;
+	}
+	.modal-body{
+		padding: 0 20px 20px 20px;
+	}
+	.modal-footer{
+		border: none;
+		padding: 0 20px 20px 20px;
+		text-align: center;
+	}
+}
+
+.recruitment {
+	.candidate-name {
+		font-size: 30px;
+		font-weight: 300;
+		padding: 20px 20px 5px 20px;
+		margin-top: 40px;
+		p {
+			padding: 0;
+		}
+		img {
+			margin-right: 20px;
+		}
+	}
+	.attachments .file {
+		a {
+			display: block;
+			color: #00aafa;
+			padding: 10px;
+			border: 1px solid #e7e7e7;
+			border-radius: 3px;
+			margin-top: 5px;
+		}
+		a:hover {
+			border-color: #00aafa;
+			text-decoration: none;
+		}
+	}
+}
+.candidates .data {
+	box-sizing: border-box;
+	height: 100%;
+	padding-bottom: 158px;
+	overflow: auto;
+}
+.candidates .overview {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	color: #00c378;
+	width: 100%;
+	padding: 50px 20px 0 20px;
+	overflow: hidden;
+	background-color: #fbfbfb;
+	hr {
+		height: 2px;
+		background-color: #00c378;
+		border: none;
+		margin: 0;
+		padding: 0;
+	}
+	.marker {
+		position: absolute;
+		display: block;
+		width: 28px;
+		padding: 0;
+		margin: 0 0 0 10px;
+		left: 0;
+		top: 37px;
+		img {
+			height: 28px;
+		}
+	}
+	.total {
+		position: absolute;
+		left: 20px;
+		top: 0;
+		font-size: 15px;
+		font-weight: 300;
+		padding: 10px 0;
+	}
+	.remaining-days {
+		position: absolute;
+		right: 20px;
+		top: 0;
+		font-size: 15px;
+		font-weight: 300;
+		padding: 10px 0;
+	}
+	.count {
+		font-size: 40px;
+		font-weight: 200;
+	}
+	table {
+		clear: both;
+	}
+	td {
+		text-align: center!important;
+		background: transparent!important;
+		border: none;
+		&:hover {
+			background: transparent;
+		}
+	}
+	.label {
+		color: #a0a0a0;
+		font-size: 9px;
+		font-weight: 500;
+		text-transform: uppercase;
+	}
+}
+
+.modal.competencies {
+	.level {
+		padding: 12px 20px;
+		margin: 10px 0 0 0;
+		font-size: 15px;
+		line-height: 18px;
+		min-height: 46px;
+		color: #464646;
+		border: 2px solid #e7e7e7;
+		border-radius: 3px;
+		background-color: transparent;
+		width: 100%;
+		cursor: pointer;
+		&:hover {
+			border-color: #a0a0a0;
+		}
+		&.active {
+			border-color: #00c378;
+		}
+	}
+}

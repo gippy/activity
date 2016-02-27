@@ -1,0 +1,54 @@
+body {
+	background-color: @color-gray-light;
+	&.dashboard {
+		background-color: @color-black-darker;
+	}
+
+	&.step-3 .bg-for-step { background-color: @color-yellow; }
+	&.step-2 .bg-for-step { background-color: @color-green-darker; }
+	&.step-1 .bg-for-step { background-color: @color-green-dark; }
+	&.step-5 .bg-for-step { background-color: @color-blue; }
+	&.step-4 .bg-for-step { background-color: @color-blue-darker; }
+
+	&.step-3 .light-bg-for-step { background-color: @color-yellow-light; }
+	&.step-2 .light-bg-for-step { background-color: @color-green-light; }
+	&.step-1 .light-bg-for-step { background-color: @color-green-lighter; }
+	&.step-5 .light-bg-for-step { background-color: @color-blue-light; }
+	&.step-4 .light-bg-for-step { background-color: @color-blue-lighter; }
+}
+
+.colors {
+	width: 100%;
+	display: block;
+	list-style-type: none;
+	padding: 0;
+	margin-bottom: 45px;
+
+	li {
+		display: inline-block;
+		margin-right: -4px;
+		font-size:10px;
+		line-height: 10px;
+		height: 10px;
+		width: 20%;
+		padding: 0;
+	}
+}
+
+.bg-yellow { background-color: @color-yellow; }
+.bg-green-light { background-color: @color-green-darker; }
+.bg-green { background-color: @color-green-dark; }
+.bg-blue-light { background-color: @color-blue; }
+.bg-blue { background-color: @color-blue-darker; }
+.bg-gray { background-color: @color-gray-dark; }
+.bg-red { background-color: @color-red; }
+.bg-orange { background-color: @color-orange; }
+.bg-transparent { background-color: transparent; }
+.bg-primary { background-color: #428bca; }
+
+.color-yellow { color: @color-yellow; }
+.color-green-light { color: @color-green-darker; }
+.color-green { color: @color-green-dark; }
+.color-blue-light { color: @color-blue; }
+.color-blue { color: @color-blue-darker; }
+.color-gray { color: @color-gray-dark; }

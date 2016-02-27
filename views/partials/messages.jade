@@ -1,0 +1,12 @@
+if messages.info
+	each message in messages.info
+		.message.info.alert.alert-info= message
+if messages.success
+	each message in messages.success
+		.message.success.alert.alert-success= message
+if messages.error
+	each message in messages.error
+		.message.error.alert.alert-danger= message
+if messages.warning
+	each message in messages.warning
+		.message.info.alert.alert-warning= message

@@ -1,0 +1,13 @@
+extends layout
+
+block content
+	div(style="margin: 20px auto 0 auto;")
+
+		form(action='/login', method='POST')
+			.form-row
+				.full-field.center-text
+					label(for='password', style="font-size: 15px; text-align: center; width: 100%;") Vaše heslo
+					input#password.field-m(type='password', name='password', required, style="text-align: center; max-width: 500px; display: inline-block;")
+			.form-actions
+				.center-text
+					button.btn(type='submit', style="margin-right: 10px;") Přihlásit se

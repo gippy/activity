@@ -1,0 +1,16 @@
+# IDE files
+.idea
+
+# Logs
+logs
+*.log
+
+uploads
+
+node_modules
+
+# Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
+
+#configuration
+config/config.js

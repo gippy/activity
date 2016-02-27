@@ -1,0 +1,324 @@
+//
+// Variables
+// --------------------------------------------------
+
+@btn-font-color: @color-white;
+@btn-default-bg: @color-black-lighter;
+@btn-primary-bg: @color-blue;
+@btn-success-bg: @color-green-darker;
+@btn-info-bg: @color-gray-darker;
+@btn-warning-bg: @color-orange;
+@btn-danger-bg: @color-red;
+@btn-font-weight: bold;
+
+@btn-padding-horizontal: 3em;
+@btn-padding-vertical: 1em;
+
+// Base styles
+// --------------------------------------------------
+
+.btn {
+	display: inline-block;
+	margin-bottom: 0; // For input.btn
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer;
+	background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
+	border: 1px solid transparent;
+	white-space: nowrap;
+	text-transform: uppercase;
+	font-weight: bold;
+	border-radius: 4px;
+	.user-select(none);
+
+	&,
+	&:active,
+	&.active {
+		&:focus {
+			.tab-focus();
+		}
+	}
+
+	&:hover,
+	&:focus {
+		color: @btn-font-color;
+		text-decoration: none;
+	}
+
+	&:active,
+	&.active {
+		outline: 0;
+		background-image: none;
+		.box-shadow(inset 0 3px 5px rgba(0,0,0,.125));
+	}
+
+	&.disabled,
+	&[disabled],
+	fieldset[disabled] & {
+		cursor: not-allowed;
+		pointer-events: none; // Future-proof disabling of clicks
+		.opacity(.65);
+		.box-shadow(none);
+	}
+}
+
+// Alternate buttons
+// --------------------------------------------------
+
+.btn-default {
+	.button-variant(@btn-font-color; @btn-default-bg; transparent);
+}
+.btn-primary {
+	.button-variant(@btn-font-color; @btn-primary-bg; transparent);
+}
+// Success appears as green
+.btn-success {
+	.button-variant(@btn-font-color; @btn-success-bg; transparent);
+}
+// Info appears as blue-green
+.btn-info {
+	.button-variant(@btn-font-color; @btn-info-bg; transparent);
+}
+// Warning appears as orange
+.btn-warning {
+	.button-variant(@btn-font-color; @btn-warning-bg; transparent);
+}
+// Danger and error appear as red
+.btn-danger {
+	.button-variant(@btn-font-color; @btn-danger-bg; transparent);
+}
+
+/*** File buttons ***/
+
+.btn-file {
+	position: relative;
+	overflow: hidden;
+	text-align: center;
+	width: 120px;
+	margin-left: 14px;
+	height: 37px;
+	line-height: 37px;
+	font-size: @font-base-size;
+	background-color: @color-yellow;
+	color: @color-white;
+}
+.btn-file input[type=file] {
+	position: absolute;
+	top: 0;
+	right: 0;
+	min-width: 100%;
+	min-height: 100%;
+	font-size: 999px;
+	text-align: right;
+	filter: alpha(opacity=0);
+	opacity: 0;
+	outline: none;
+	background: white;
+	cursor: inherit;
+	display: block;
+}
+
+/*** Login / register buttons ***/
+.btn-login {
+	text-align: center;
+	width: 165px;
+	height: 48px;
+	line-height: 48px;
+	vertical-align: middle;
+	font-size: @font-base-size;
+}
+a.btn-login {
+	font-size: @font-h6-size;
+}
+
+.btn-tool {
+	text-align: center;
+	width: 124px;
+	height: 48px;
+	line-height: 48px;
+	vertical-align: middle;
+	font-size: @font-base-size;
+	margin-right: 10px;
+}
+
+.btn-table-add {
+	text-align: center;
+	width: 80px;
+	height: 30px;
+	line-height: 30px;
+	font-size: @font-base-size;
+	background-color: @color-gray-darker;
+	color: @color-white;
+}
+
+.btn-table-remove {
+	text-align: center;
+	width: 80px;
+	height: 24px;
+	line-height: 24px;
+	font-size: @font-h6-size;
+	background-color: @color-red;
+	color: @color-white;
+}
+
+.btn-panel-action {
+	color: @color-white;
+	background-color: transparent;
+	float: right;
+	margin-left: 20px;
+	padding: 0;
+	font-size: 20px;
+}
+
+.btn-table-action {
+	padding: 10px 10px;
+}
+
+.btn-qfd-add {
+	padding: 0 10px;
+	margin: 5px;
+	height: 24px;
+	line-height: 24px;
+	font-size: @font-h6-size;
+	background-color: @color-green-darker;
+	color: @color-white;
+}
+
+.btn-qfd-remove {
+	padding: 0 10px;
+	margin: 5px;
+	height: 24px;
+	line-height: 24px;
+	float: right;
+	font-size: @font-h6-size;
+	background-color: @color-gray-darker;
+	color: @color-white;
+}
+
+@-webkit-keyframes active-save-button {
+	0%, 100%   { background: @btn-primary-bg; }
+	50% { background: darken(@btn-primary-bg, 40%); }
+}
+@-moz-keyframes active-save-button {
+	0%, 100%   { background: @btn-primary-bg; }
+	50% { background: darken(@btn-primary-bg, 40%); }
+}
+@-o-keyframes active-save-button {
+	0%, 100%   { background: @btn-primary-bg; }
+	50% { background: darken(@btn-primary-bg, 40%); }
+}
+@keyframes active-save-button {
+	0%, 100%   { background: @btn-primary-bg; }
+	50% { background: darken(@btn-primary-bg, 40%); }
+}
+
+.btn-active {
+	-webkit-animation: active-save-button 1.5s infinite; /* Safari 4+ */
+	-moz-animation:    active-save-button 1.5s infinite; /* Fx 5+ */
+	-o-animation:      active-save-button 1.5s infinite; /* Opera 12+ */
+	animation:         active-save-button 1.5s infinite; /* IE 10+, Fx 29+ */
+}
+
+.btn-issue {
+	margin: 20px 40px;
+	padding: 10px 10px;
+}
+
+.button {
+	margin: 0px 0px;
+	padding: 2px 5px;
+	font-weight: bold;
+}
+
+.navbar-btn {
+	padding: 6px 10px;
+}
+
+.btn.move{
+	padding: 0.6em 0.9em;
+	background-color: transparent;
+	border: 1px solid @color-gray-dark;
+	font-size: 0.9em;
+	color: @color-gray-dark;
+	margin-bottom: 0.5em;
+	cursor: move;
+	&:hover {
+		color: @color-gray;
+		border-color: @color-gray;
+	}
+}
+
+.recruitment {
+	.btn-empty {
+		height: 46px;
+		font-size: 20px;
+		line-height: 20px;
+		padding: 15px;
+		border: 2px solid #00c378;
+		color: #00c378;
+		text-transform: none!important;
+		background-color: transparent;
+		border-radius: 3px;
+		&:hover {
+			border-color: #00d684;
+			color: #00d684;
+		}
+		&:active {
+			border-color: #00995e;
+			color: #00995e;
+		}
+		&.select {
+			width: 56px;
+			color: transparent;
+			background: transparent url('../images/select.png') right top no-repeat;
+		}
+	}
+	.btn {
+		height: 50px;
+		font-size: 15px;
+		line-height: 18px;
+		padding: 15px;
+		background-color: #00c378;
+		color: white;
+		text-transform: none!important;
+		border-radius: 3px;
+		&:hover {
+			background-color: #00d684;
+		}
+		&:active {
+			background-color: #00995e;
+		}
+		&.btn-danger {
+			background-color: #eb0050;
+			&:hover {
+				background-color: #F80054;
+			}
+			&:active {
+				background-color: #AB003A;
+			}
+		}
+	}
+	.btn-group {
+		button {
+			border-left: none;
+			border-radius: 0;
+		}
+		button:first-child {
+			border-left: 2px solid #00c378;
+			border-top-left-radius: 3px;
+			border-bottom-left-radius: 3px;
+		}
+		button:last-child {
+			border-top-right-radius: 3px;
+			border-bottom-right-radius: 3px;
+		}
+	}
+	.small {
+		font-size: 9px;
+		line-height: 10px;
+		padding: 10px;
+		margin: -10px 5px 0px 5px;
+		text-transform: uppercase!important;
+		height: auto;
+	}
+}

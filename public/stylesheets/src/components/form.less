@@ -1,0 +1,444 @@
+/*** Variables
+-------------------------------------------*/
+
+
+@label-width: 199px;
+@label-width-xs: 115px;
+@label-width-l: 350px;
+@label-font-color: @color-black-lighter;
+@label-bg-color: @color-gray-lighter;
+
+@label-height: 40px;
+@label-height-larger: 120px;
+
+@label-vertical-padding: 20px;
+
+@field-bg-color: @color-white;
+@field-font-color: @color-black;
+@field-border-color: #ccc;
+
+@field-width-extra-small: 90px;
+@field-width-small: 185px;
+@field-width-medium: 298px;
+@field-width: 574px;
+@field-width-large: 800px;
+
+@field-height: 40px;
+@field-height-larger: 120px;
+
+@field-vertical-padding:20px;
+
+@field-panel-xl-width: 779px;
+@field-panel-l-width: 639px;
+@field-panel-m-width: 533px;
+@field-panel-s-width: 259px;
+
+:-moz-submit-invalid {
+	box-shadow: none;
+}
+
+:-moz-ui-invalid {
+	box-shadow:none;
+}
+
+input:invalid {
+	box-shadow: none;
+	border-bottom: 2px solid @btn-danger-bg;
+}
+
+select:invalid {
+	box-shadow: none;
+	border-bottom: 2px solid @btn-danger-bg;
+}
+
+textarea:invalid {
+	box-shadow: none;
+	border-bottom: 2px solid @btn-danger-bg;
+}
+
+/*** Form dividers
+-------------------------------------------*/
+
+.form-row {
+	margin: 5px 0;
+	&:extend(.clearfix all);
+}
+.form-actions {
+	margin: 65px 0 35px 0;
+}
+
+/*** Labels
+-------------------------------------------*/
+.form-row {
+}
+
+label:not(.switch-label) {
+	width: @label-width;
+	color: @label-font-color;
+	background-color: @label-bg-color;
+	text-align: right;
+	padding: 10px @label-vertical-padding;
+	font-weight: normal;
+
+	display: inline-block;
+}
+
+label.field-xs {
+	width: @label-width-xs;
+}
+label.field-l, .panel label.field-l:not(.switch-label) {
+	width: @label-width-l;
+}
+
+label.textarea {
+	height: @field-height-larger;
+}
+
+label.checkbox {
+	text-align: left;
+	background: transparent;
+	font-weight: bold;
+	width: auto;
+}
+
+.panel label:not(.switch-label) {
+	width: 216px;
+}
+
+/*** Inputs
+-------------------------------------------*/
+
+input:not(.switch-input) {
+	display: inline-block;
+	width: @field-width;
+	border: none;
+	border-bottom: 1px solid @field-border-color;
+	color: @field-font-color;
+	background: @field-bg-color;
+	padding: 10px @field-vertical-padding;
+	font-weight: bold;
+	text-align: left;
+	vertical-align: top;
+
+	&.field-xl {
+		width: @field-width-large;
+	}
+
+	&.field-l {
+		width: @field-width;
+	}
+
+	&.field-m {
+		width: @field-width-medium;
+	}
+
+	&.field-half {
+		width: 287px;
+	}
+
+	&.field-s {
+		width: @field-width-small;
+	}
+
+	&.field-xs {
+		width: @field-width-extra-small;
+	}
+
+	&.date {
+		padding-right: 40px;
+		background: @field-bg-color url('../images/calendar-icon.png') right top no-repeat;
+		&.late {
+			color:#eb0050;
+		}
+	}
+
+	&.ng-invalid {
+		border-bottom: 2px solid @btn-danger-bg;
+	}
+}
+
+.user-error {
+	outline: none!important;
+	border-bottom: 2px solid @color-red!important;
+}
+
+.input-value {
+	display: inline-block;
+	width: @field-width;
+	border: none;
+	border-bottom: 1px solid @field-border-color;
+	color: @field-font-color;
+	background: @field-bg-color;
+	padding: 10px @field-vertical-padding;
+	min-height: 39px;
+	font-weight: bold;
+	text-align: left;
+	vertical-align: middle;
+	margin-top: -0.2em;
+	&.field-m {
+		width: @field-width-medium;
+	}
+}
+
+select {
+	width: @field-width;
+	border: none;
+	border-bottom: 1px solid @field-border-color;
+	color: @field-font-color;
+	background: @field-bg-color;
+	padding: 7px @field-vertical-padding;
+	font-weight: bold;
+	text-align: left;
+	vertical-align: top;
+
+	&.field-m {
+		width: @field-width-medium;
+	}
+
+	&.field-half {
+		width: 293px;
+	}
+
+	&.field-s {
+		width: @field-width-small;
+	}
+
+	&.field-xs {
+		width: @field-width-extra-small;
+	}
+
+	&.ng-invalid {
+		border-bottom: 2px solid @btn-danger-bg;
+	}
+}
+
+textarea {
+	width: @field-width;
+	border: none;
+	border-bottom: 1px solid @field-border-color;
+	color: @field-font-color;
+	background: @field-bg-color;
+	padding: 10px @field-vertical-padding;
+	text-align: left;
+	vertical-align: top;
+	resize: none;
+
+	height: @field-height-larger + 1px;
+
+	&.field-m {
+		width: @field-width-medium;
+	}
+
+	&.field-s {
+		width: @field-width-small;
+	}
+
+	&.ng-invalid {
+		border-bottom: 2px solid @btn-danger-bg;
+	}
+
+}
+
+.textarea-value {
+	display: inline-block;
+	white-space: pre-wrap;
+	overflow: hidden;
+	vertical-align: top;
+
+	min-width: @field-width;
+	border: none;
+	border-bottom: 1px solid @field-border-color;
+	color: @field-font-color;
+	background: @field-bg-color;
+	padding: 10px @field-vertical-padding;
+	text-align: left;
+	resize: none;
+
+	min-height: @field-height-larger + 1px;
+}
+
+/**** Placeholders
+-------------------------------------*/
+
+input, textarea {
+	&::-webkit-input-placeholder {
+		font-weight: normal;
+		font-style: italic;
+		color: #c2bebb;
+	}
+
+	&:-moz-placeholder { /* Firefox 18- */
+		font-weight: normal;
+		font-style: italic;
+		color: #c2bebb;
+	}
+
+	&::-moz-placeholder {  /* Firefox 19+ */
+		font-weight: normal;
+		font-style: italic;
+		color: #c2bebb;
+	}
+
+	&:-ms-input-placeholder {
+		font-weight: normal;
+		font-style: italic;
+		color: #c2bebb;
+	}
+}
+
+.popover{
+	max-width: 500px; /* Max Width of the popover (depending on the container!) */
+}
+.popover-content {
+	font-size: 13px;
+}
+
+input.fullwidth, textarea.fullwidth {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.recruitment, .activity {
+	.form-row {
+		.col-sm-2, .col-sm-5 {
+			padding: 0;
+		}
+		label {
+			font-size: 9px;
+			color: #a0a0a0;
+			display:block;
+			line-height: 10px;
+			padding: 0;
+			margin: 0 0 12px 0;
+			background-color: transparent;
+			text-align: left;
+			text-transform: uppercase;
+		}
+		input:not(.switch-input) {
+			display: block;
+			font-size: 15px;
+			line-height: 18px;
+			height: 46px;
+			color: #464646;
+			border: 2px solid #e7e7e7;
+			border-radius: 3px;
+			background-color: transparent;
+			padding: 12px 20px;
+			margin: 0;
+			width: 100%;
+			&.date {
+				padding-right: 50px;
+				background: transparent url('../images/Calendar.png') right top no-repeat;
+			}
+			&[bs-typeahead]{
+				padding-right: 50px;
+				background: transparent url('../images/select.png') right top no-repeat;
+			}
+		}
+		textarea {
+			display: block;
+			font-size: 15px;
+			line-height: 18px;
+			height: 46px;
+			color: #464646;
+			border: 2px solid #e7e7e7;
+			border-radius: 3px;
+			background-color: transparent;
+			padding: 12px 20px;
+			margin: 0;
+			width: 100%;
+		}
+		.input-value {
+			display: block;
+			font-size: 15px;
+			line-height: 18px;
+			height: 46px;
+			color: #464646;
+			border: 2px solid #e7e7e7;
+			border-radius: 3px;
+			background-color: transparent;
+			padding: 12px 20px;
+			margin: 0;
+			width: 100%;
+		}
+		button.select{
+			display: block;
+			font-size: 15px;
+			line-height: 18px;
+			height: 46px;
+			color: #464646;
+			border: 2px solid #e7e7e7;
+			border-radius: 3px;
+			padding: 12px 50px 12px 20px;
+			margin: 0;
+			width: 100%;
+			text-align: left;
+			background: transparent url('../images/select.png') right top no-repeat;
+			font-weight: 700;
+		}
+	}
+	.full-field {
+		width: 100%;
+		padding: 20px 20px 0 20px;
+		vertical-align: top;
+	}
+	.half-field {
+		width: 50%;
+		display: inline-block;
+		padding: 20px 20px 0 20px;
+		vertical-align: top;
+
+		& > .btn {
+			width: 100%;
+		}
+	}
+	.quarter-field {
+		width: 25%;
+		display: inline-block;
+		padding: 20px 20px 0 20px;
+		vertical-align: top;
+
+		& > .btn {
+			width: 100%;
+		}
+	}
+	.form-actions {
+		margin-top: 50px;
+	}
+
+	.filters {
+		.search {
+			display:inline-block;
+			height: 40px;
+			width: 350px;
+			background: transparent url('../images/search.png') right top no-repeat;
+			font-weight: 700;
+			color: #464646;
+			border: 1px solid #e7e7e7;
+			border-radius: 20px;
+			padding: 7px 50px 7px 20px;
+			text-align: left;
+		}
+		.select{
+			display:inline-block;
+			font-size: 15px;
+			line-height: 18px;
+			height: 40px;
+			width: 300px;
+			color: #464646;
+			border: 1px solid #e7e7e7;
+			border-radius: 20px;
+			padding: 7px 50px 7px 20px;
+			margin: 0;
+			text-align: left;
+			background: transparent url('../images/select.png') right top no-repeat;
+			font-weight: 700;
+			margin-right: 20px;
+		}
+	}
+}
+
+.dropdown-menu {
+	z-index: 10000000000000;
+}
