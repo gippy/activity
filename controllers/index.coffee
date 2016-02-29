@@ -150,7 +150,6 @@ parseWeeks = (actions, info, weeks, types, dates, data) ->
 			week: cell,
 			date: moment(dates[key] + '2016', "D.M.YYYY").format('YYYY-MM-DD'),
 		}
-		console.log cell, dates[key]
 		for row in data
 			itemData = {}
 			itemData.region = info.region

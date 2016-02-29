@@ -22,6 +22,7 @@ module.exports = function ( app ) {
 
 	app.get('/logout', index.logout );
 
+	app.get( '/', index.dashboard );
 	app.get( '/dashboard', index.dashboard );
 	app.post( '/upload', upload.array('files'), index.upload);
 	app.get( '/download', index.download);
