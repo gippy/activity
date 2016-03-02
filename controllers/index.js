@@ -154,9 +154,10 @@ parseActions = function(actions) {
 };
 
 parseDays = function(actions, info, week, dates, data) {
-  var action, cell, day, firstDay, itemData, j, k, key, len, len1, realData, row;
+  var action, cell, count, day, firstDay, itemData, j, k, key, len, len1, realData, row;
   realData = [];
   firstDay = moment(dates[2] + '2016', "D.M.YYYY");
+  count = 0;
   for (key = j = 0, len = dates.length; j < len; key = ++j) {
     cell = dates[key];
     if (!(key > 1 && cell && cell.length === 2)) {
@@ -164,9 +165,10 @@ parseDays = function(actions, info, week, dates, data) {
     }
     day = {
       week: week,
-      day: firstDay.clone().add(key - 1, 'd').format('YYYY-MM-DD'),
+      day: firstDay.clone().add(count, 'd').format('YYYY-MM-DD'),
       dayOfWeek: cell
     };
+    count++;
     for (k = 0, len1 = data.length; k < len1; k++) {
       row = data[k];
       itemData = {};
@@ -216,7 +218,6 @@ parseWeeks = function(actions, info, weeks, types, dates, data) {
       week: cell,
       date: moment(dates[key] + '2016', "D.M.YYYY").format('YYYY-MM-DD')
     };
-    console.log(cell, dates[key]);
     for (k = 0, len1 = data.length; k < len1; k++) {
       row = data[k];
       itemData = {};

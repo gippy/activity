@@ -110,12 +110,14 @@ parseActions = (actions) ->
 parseDays = (actions, info, week, dates, data) ->
 	realData = []
 	firstDay = moment(dates[2] + '2016', "D.M.YYYY")
+	count = 0
 	for cell, key in dates when key > 1 and cell and cell.length is 2
 		day = {
 			week: week,
-			day: firstDay.clone().add(key-1, 'd').format('YYYY-MM-DD'),
+			day: firstDay.clone().add(count, 'd').format('YYYY-MM-DD'),
 			dayOfWeek: cell
 		}
+		count++
 		for row in data
 			itemData = {}
 			itemData.region = info.region
