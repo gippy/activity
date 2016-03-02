@@ -128,7 +128,7 @@ parseDays = (actions, info, week, dates, data) ->
 			itemData.date = day.day
 			itemData.dayOfWeek = day.dayOfWeek
 			itemData.planned = if row.length >= key and row[key] then row[key] else 0
-			itemData.current = if row.length > key and key <= 10 and row[key] then row[key+1] else 0
+			itemData.current = if row.length > key and key <= 10 and row[key+1] then row[key+1] else 0
 			itemData.action = row[0]
 			action = actions[row[0]]
 			if action

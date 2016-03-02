@@ -180,7 +180,7 @@ parseDays = function(actions, info, week, dates, data) {
       itemData.date = day.day;
       itemData.dayOfWeek = day.dayOfWeek;
       itemData.planned = row.length >= key && row[key] ? row[key] : 0;
-      itemData.current = row.length > key && key <= 10 && row[key] ? row[key + 1] : 0;
+      itemData.current = row.length > key && key <= 10 && row[key + 1] ? row[key + 1] : 0;
       itemData.action = row[0];
       action = actions[row[0]];
       if (action) {
