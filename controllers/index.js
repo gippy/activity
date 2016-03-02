@@ -160,7 +160,7 @@ parseDays = function(actions, info, week, dates, data) {
   count = 0;
   for (key = j = 0, len = dates.length; j < len; key = ++j) {
     cell = dates[key];
-    if (!(key > 1 && cell && cell.length === 2)) {
+    if (!(key > 0 && cell && cell.length === 2)) {
       continue;
     }
     day = {

@@ -111,7 +111,7 @@ parseDays = (actions, info, week, dates, data) ->
 	realData = []
 	firstDay = moment(dates[2] + '2016', "D.M.YYYY")
 	count = 0
-	for cell, key in dates when key > 1 and cell and cell.length is 2
+	for cell, key in dates when key > 0 and cell and cell.length is 2
 		day = {
 			week: week,
 			day: firstDay.clone().add(count, 'd').format('YYYY-MM-DD'),
