@@ -70,7 +70,7 @@ exports.logout = function(req, res, next) {
 exports.download = function(req, res, next) {
   return Activity.find({
     password: req.query.pass
-  }, 'region unit position name week date dayOfWeek planned current action process step').sort({
+  }, 'region unit position name week date dayOfWeek planned current action').sort({
     region: 1,
     unit: 1,
     name: 1,
@@ -84,10 +84,10 @@ exports.download = function(req, res, next) {
       return res.redirect('/dashboard');
     } else {
       data = [];
-      data.push(['region', 'jednotka', 'pozice', 'jméno', 'týden', 'den', 'den v týdnu', 'plán', 'aktuálně', 'akce', 'proces', 'krok v procesu']);
+      data.push(['region', 'jednotka', 'pozice', 'jméno', 'týden', 'den', 'den v týdnu', 'plán', 'aktuálně', 'akce']);
       for (j = 0, len = activities.length; j < len; j++) {
         activity = activities[j];
-        data.push([activity.region, activity.unit, activity.position, activity.name, activity.week, activity.date, activity.dayOfWeek, activity.planned, activity.current, activity.action, activity.process, activity.step]);
+        data.push([activity.region, activity.unit, activity.position, activity.name, activity.week, activity.date, activity.dayOfWeek, activity.planned, activity.current, activity.action]);
       }
       buffer = xlsx.build([
         {
@@ -208,7 +208,6 @@ parseDays = function(actions, info, week, dates, data) {
 parseWeeks = function(actions, info, weeks, types, dates, data) {
   var action, cell, itemData, j, k, key, len, len1, realWeekData, row, week;
   realWeekData = [];
-  console.log(weeks, dates);
   for (key = j = 0, len = weeks.length; j < len; key = ++j) {
     cell = weeks[key];
     if (!(key > 3 && cell)) {

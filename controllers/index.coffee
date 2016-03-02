@@ -48,7 +48,7 @@ exports.logout = (req, res, next) ->
 
 exports.download = (req, res, next) ->
 	Activity
-		.find({password: req.query.pass}, 'region unit position name week date dayOfWeek planned current action process step')
+		.find({password: req.query.pass}, 'region unit position name week date dayOfWeek planned current action')
 		.sort({region: 1, unit: 1, name: 1, week: 1, date: 1, action: 1})
 		.exec (err, activities)->
 			if err
@@ -56,9 +56,9 @@ exports.download = (req, res, next) ->
 				res.redirect '/dashboard'
 			else
 				data = []
-				data.push ['region', 'jednotka', 'pozice', 'jméno', 'týden', 'den', 'den v týdnu', 'plán', 'aktuálně', 'akce', 'proces', 'krok v procesu']
+				data.push ['region', 'jednotka', 'pozice', 'jméno', 'týden', 'den', 'den v týdnu', 'plán', 'aktuálně', 'akce']
 				for activity in activities
-					data.push [activity.region, activity.unit, activity.position, activity.name, activity.week, activity.date, activity.dayOfWeek, activity.planned, activity.current, activity.action, activity.process, activity.step]
+					data.push [activity.region, activity.unit, activity.position, activity.name, activity.week, activity.date, activity.dayOfWeek, activity.planned, activity.current, activity.action]
 
 				buffer = xlsx.build [{name: 'Záznamy', data: data}]
 				res.attachment('datasheet.xlsx');
@@ -146,7 +146,6 @@ parseDays = (actions, info, week, dates, data) ->
 
 parseWeeks = (actions, info, weeks, types, dates, data) ->
 	realWeekData = []
-	console.log weeks, dates
 	for cell, key in weeks when key > 3 and cell
 		week = {
 			week: cell,
