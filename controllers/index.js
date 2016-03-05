@@ -296,7 +296,7 @@ parseData = function(info, data) {
 parseFile = function(file, next) {
   var data, dot, info;
   dot = file.originalname.indexOf('.xlsx');
-  if (!dot) {
+  if (dot === -1) {
     dot = file.originalname.indexOf('.xls');
   }
   if (dot === -1) {
