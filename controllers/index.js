@@ -296,6 +296,9 @@ parseData = function(info, data) {
 parseFile = function(file, next) {
   var data, dot, info;
   dot = file.originalname.indexOf('.xlsx');
+  if (!dot) {
+    dot = file.originalname.indexOf('.xls');
+  }
   if (dot === -1) {
     return next('Soubor ' + file.originalname + ' není excelový soubor.');
   } else {

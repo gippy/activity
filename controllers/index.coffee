@@ -208,6 +208,8 @@ parseData = (info, data) ->
 
 parseFile = (file, next) ->
 	dot = file.originalname.indexOf('.xlsx')
+	if !dot then dot = file.originalname.indexOf('.xls')
+
 	if dot is -1 then next('Soubor ' + file.originalname + ' není excelový soubor.')
 	else
 		info = parseName(file.originalname, dot)
