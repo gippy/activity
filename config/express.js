@@ -62,6 +62,7 @@ module.exports = function (app, config, env) {
 
 		app.use(function(err, req, res, next) {
 			res.status(err.status || 500);
+			console.log(err);
 			res.render('error', {
 				message: err.message,
 				error: err
@@ -73,6 +74,7 @@ module.exports = function (app, config, env) {
 
 		app.use(function (err, req, res, next) {
 			res.status(err.status || 500);
+			console.log(err);
 			res.render('error', {
 				message: err.message,
 				error: {}

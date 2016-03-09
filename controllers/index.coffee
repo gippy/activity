@@ -74,20 +74,10 @@ parseName = (name, dot) ->
 		region: nameParts.shift(),
 		unit: ''
 	}
-	if type.indexOf('MP') isnt -1
-		info.position = 'MP'
-		info.name = nameParts.join(' ')
-	else if type.indexOf('SP') isnt -1
-		info.position = 'SP'
-		info.name = nameParts.join(' ')
-	else if type.indexOf('UM') isnt -1
-		info.position = 'UM'
-		info.unit = nameParts.shift()
-		info.name = nameParts.join(' ')
-	else
-		info.position = 'FA'
-		info.unit = nameParts.shift()
-		info.name = nameParts.join(' ')
+	if !info.position then info.position = 'FA'
+	unit = nameParts.shift()
+	info.unit = if unit is 999 then '' else unit
+	info.name = nameParts.join(' ')
 
 	return info
 
@@ -197,7 +187,7 @@ parseData = (info, data) ->
 	actions= {}
 	sheets = []
 	result = []
-	for sheet in data
+	for sheet in data when sheet.data and sheet.data.length > 0
 		sheet.name = sheet.name.replace(' POPIS', '')
 		if sheet.name is 'Aktivity_'+info.position then actions = parseActions(sheet.data)
 		else if sheet.data[0].length > 3 and sheet.data[0][4] != ''

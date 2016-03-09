@@ -103,7 +103,7 @@ exports.download = function(req, res, next) {
 };
 
 parseName = function(name, dot) {
-  var info, nameParts, type;
+  var info, nameParts, type, unit;
   nameParts = name.substr(0, dot).split('_').filter(function(item) {
     return item.length > 0;
   });
@@ -114,21 +114,12 @@ parseName = function(name, dot) {
     region: nameParts.shift(),
     unit: ''
   };
-  if (type.indexOf('MP') !== -1) {
-    info.position = 'MP';
-    info.name = nameParts.join(' ');
-  } else if (type.indexOf('SP') !== -1) {
-    info.position = 'SP';
-    info.name = nameParts.join(' ');
-  } else if (type.indexOf('UM') !== -1) {
-    info.position = 'UM';
-    info.unit = nameParts.shift();
-    info.name = nameParts.join(' ');
-  } else {
+  if (!info.position) {
     info.position = 'FA';
-    info.unit = nameParts.shift();
-    info.name = nameParts.join(' ');
   }
+  unit = nameParts.shift();
+  info.unit = unit === 999 ? '' : unit;
+  info.name = nameParts.join(' ');
   return info;
 };
 
@@ -278,6 +269,9 @@ parseData = function(info, data) {
   result = [];
   for (j = 0, len = data.length; j < len; j++) {
     sheet = data[j];
+    if (!(sheet.data && sheet.data.length > 0)) {
+      continue;
+    }
     sheet.name = sheet.name.replace(' POPIS', '');
     if (sheet.name === 'Aktivity_' + info.position) {
       actions = parseActions(sheet.data);
