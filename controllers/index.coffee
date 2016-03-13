@@ -322,32 +322,6 @@ getOptions = (next) ->
 		next
 	)
 
-getPeriod = (text, position) ->
-	if !text then text = 'today'
-	if text is 'today' and position isnt 'FA' then text = 'last-week'
-	now = moment()
-	period = {
-		from: null,
-		to: null
-	}
-	switch text
-		when "today"
-			period.from = now.clone().startOf('day').format('YYYY-MM-DD')
-			period.to = now.clone().endOf('day').format('YYYY-MM-DD')
-		when "week"
-			period.from = now.clone().startOf('isoWeek').format('YYYY-MM-DD')
-			period.to = now.clone().endOf('isoWeek').format('YYYY-MM-DD')
-		when "last-week"
-			period.from = now.clone().startOf('isoWeek').subtract(7, 'd').format('YYYY-MM-DD')
-			period.to = now.clone().endOf('isoWeek').subtract(7, 'd').format('YYYY-MM-DD')
-		when "month"
-			period.from = now.clone().startOf('month').format('YYYY-MM-DD')
-			period.to = now.clone().endOf('month').format('YYYY-MM-DD')
-		else
-			period.from = now.clone().startOf('month').subtract(1, 'M').format('YYYY-MM-DD')
-			period.to = now.clone().endOf('month').subtract(1, 'M').format('YYYY-MM-DD')
-	return period
-
 getDateQuery = (from, to) ->
 	now = moment()
 	if !from then from = now.clone().startOf('isoWeek').format('YYYY-MM-DD')
@@ -386,7 +360,15 @@ exports.getData = (req, res, next) ->
 							action = activity.action
 
 							if !users.hasOwnProperty(user) then users[user] = 0
-							if !actions.hasOwnProperty(action) then actions[action] = {current: 0, planned: 0, max: {value: 0, user: null}, count: 0, users: {}}
+							if !actions.hasOwnProperty(action) then actions[action] = {
+								current: 0,
+								planned: 0,
+								max: {value: 0, user: null},
+								count: 0,
+								users: {},
+								row: activity.row,
+								position: activity.position
+							}
 							if !actions[action].users.hasOwnProperty(user) then actions[action].users[user] = 0
 
 							if !activity.planned then activity.planned = 0
@@ -414,11 +396,22 @@ exports.getData = (req, res, next) ->
 
 							realActions.push {
 								label: label
+								row: data.row
+								position: data.position
 								current: Math.round(data.current/data.count)
 								planned: Math.round(data.planned/data.count)
 								max: data.max,
 								users: realActionUsers.splice(0,10)
 							}
+
+						realActions.sort (a,b) ->
+							if a.position < b.position then -1
+							else if a.position > b.position then 1
+							else if a.row < b.row then -1
+							else if a.row > b.row then 1
+							else if a.label < b.label then -1
+							else if a.label > b.label then 1
+							else 0
 
 						res.json {
 							options: options,

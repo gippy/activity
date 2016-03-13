@@ -1,4 +1,4 @@
-var Activity, async, config, env, fs, getDateQuery, getOptions, getPeriod, getPositions, getRegions, moment, mongoose, parseActions, parseData, parseDays, parseFile, parseName, parseSheets, parseWeeks, saveFiles, xlsx;
+var Activity, async, config, env, fs, getDateQuery, getOptions, getPositions, getRegions, moment, mongoose, parseActions, parseData, parseDays, parseFile, parseName, parseSheets, parseWeeks, saveFiles, xlsx;
 
 env = process.env.NODE_ENV || 'development';
 
@@ -467,43 +467,6 @@ getOptions = function(next) {
   ], next);
 };
 
-getPeriod = function(text, position) {
-  var now, period;
-  if (!text) {
-    text = 'today';
-  }
-  if (text === 'today' && position !== 'FA') {
-    text = 'last-week';
-  }
-  now = moment();
-  period = {
-    from: null,
-    to: null
-  };
-  switch (text) {
-    case "today":
-      period.from = now.clone().startOf('day').format('YYYY-MM-DD');
-      period.to = now.clone().endOf('day').format('YYYY-MM-DD');
-      break;
-    case "week":
-      period.from = now.clone().startOf('isoWeek').format('YYYY-MM-DD');
-      period.to = now.clone().endOf('isoWeek').format('YYYY-MM-DD');
-      break;
-    case "last-week":
-      period.from = now.clone().startOf('isoWeek').subtract(7, 'd').format('YYYY-MM-DD');
-      period.to = now.clone().endOf('isoWeek').subtract(7, 'd').format('YYYY-MM-DD');
-      break;
-    case "month":
-      period.from = now.clone().startOf('month').format('YYYY-MM-DD');
-      period.to = now.clone().endOf('month').format('YYYY-MM-DD');
-      break;
-    default:
-      period.from = now.clone().startOf('month').subtract(1, 'M').format('YYYY-MM-DD');
-      period.to = now.clone().endOf('month').subtract(1, 'M').format('YYYY-MM-DD');
-  }
-  return period;
-};
-
 getDateQuery = function(from, to) {
   var now;
   now = moment();
@@ -586,7 +549,9 @@ exports.getData = function(req, res, next) {
                     user: null
                   },
                   count: 0,
-                  users: {}
+                  users: {},
+                  row: activity.row,
+                  position: activity.position
                 };
               }
               if (!actions[action].users.hasOwnProperty(user)) {
@@ -650,12 +615,31 @@ exports.getData = function(req, res, next) {
               });
               realActions.push({
                 label: label,
+                row: data.row,
+                position: data.position,
                 current: Math.round(data.current / data.count),
                 planned: Math.round(data.planned / data.count),
                 max: data.max,
                 users: realActionUsers.splice(0, 10)
               });
             }
+            realActions.sort(function(a, b) {
+              if (a.position < b.position) {
+                return -1;
+              } else if (a.position > b.position) {
+                return 1;
+              } else if (a.row < b.row) {
+                return -1;
+              } else if (a.row > b.row) {
+                return 1;
+              } else if (a.label < b.label) {
+                return -1;
+              } else if (a.label > b.label) {
+                return 1;
+              } else {
+                return 0;
+              }
+            });
             return res.json({
               options: options,
               defaultFrom: dateQuery.from,
