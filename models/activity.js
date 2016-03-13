@@ -14,7 +14,8 @@ var activitySchema = Schema({
 	current: Number,
 	action: String,
 	process: String,
-	step: String
+	step: String,
+	row: Number
 });
 
 activitySchema.statics = {

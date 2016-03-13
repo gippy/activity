@@ -14,5 +14,8 @@ block content
 				for password in passwords
 					.full-field.center-text(style="margin-bottom: 20px;")
 						label(style="font-size: 15px; text-align: center; text-transform: none; width: 100%;")= "Data pro společnost s heslem: " + password
-						a.btn(href="/download?pass="+password, target="_blank", style="width: 100%; max-width: 500px;") Stáhnout soubor
+						if loggedIn == 'admin'
+							a.btn(href="/download?pass=" + password, target="_blank", style="width: 100%; max-width: 300px; margin: 0 2%;") Stáhnout soubor
+						if loggedIn == 'report'
+							a.btn(href="/report?pass=" + password, target="_blank", style="width: 100%; max-width: 300px;margin: 0 2%;") Zobrazit report
 

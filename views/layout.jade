@@ -1,11 +1,15 @@
 doctype html
-html(lang='cs-CZ')
+html(lang='cs-CZ', ng-app="ActivityApp")
 	head
 		title Activity Uploads
 		meta(name="viewport", content="width=device-width, initial-scale=1.0")
 		link(rel="stylesheet", href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css")
 		link(rel='stylesheet', href=stylesheet)
 		block stylesheets
+		script(src="/javascripts/jquery.js")
+		script(src="/javascripts/angular.js")
+		script(src="/javascripts/angular-bootstrap.js")
+		script(src="/javascripts/script.js")
 
 	body(class="activity responsive-menu")
 		.menu
@@ -23,7 +27,7 @@ html(lang='cs-CZ')
 			include partials/messages
 
 		.main
-			.container-fluid
+			.container-fluid(ng-controller="BaseController")
 				block content
 
 		block javascripts

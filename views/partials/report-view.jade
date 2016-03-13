@@ -1,0 +1,58 @@
+div.report-section(ng-controller="ViewController")
+	a.pull-right(ng-click="hideView = !hideView", style="cursor: pointer; color: #e6650d; display: inline-block; padding: 10px 0;") {{hideView ? 'Zobrazit sekci' : 'Skrýt sekci'}}
+	div.report-filters-overview(ng-show="!hideView")
+		button.btn(ng-click="showFilters = !showFilters") {{showFilters ? 'Skrýt výběr' : 'Vybrat data pro zobrazení'}}
+		| &nbsp; {{getFilters()}}
+	div.report-filters(ng-style="{maxHeight:showFilters?'600px':'0px'}")
+		.form-row
+			.full-field
+				label Pozice
+				button.select(ng-model="conditions.position", bs-select, bs-options="position.position as position.label for position in options.positions", data-show-value="true", placeholder="Zvolte pozici")
+		.form-row
+			.full-field
+				label Region
+				button.select(ng-model="conditions.region", bs-select, bs-options="region as region.label for region in options.regions", data-show-value="true", placeholder="Zvolte region")
+		.form-row(ng-show="conditions.region && conditions.region.units.length > 1")
+			.full-field
+				label Jednotka
+				button.select(ng-model="conditions.unit", bs-select, bs-options="unit.unit as unit.label for unit in conditions.region.units", data-show-value="true", placeholder="Zvolte jednotku", data-all-none-buttons="1")
+		.form-row
+			.half-field
+				label Období
+				input.date(ng-model="conditions.from", bs-datepicker, placeholder="Od")
+			.half-field
+				label &nbsp;
+				input.date(ng-model="conditions.to", bs-datepicker, placeholder="Do")
+		.form-row
+			.half-field
+				button.btn(ng-click="getData()") Použít
+	div.chart(ng-show="!hideView")
+		p
+			span.square.planned
+			span Průměrně Naplánováno
+			span.square.current
+			span Průměrně Vykonáno
+			span.square.max
+			span Max
+		div(ng-repeat="action in actions")
+			p {{action.label}}
+			.bars
+				.bar
+					.bar-content.planned(ng-style="{width: getWidth(action.planned)}", bs-tooltip, data-title="{{'Průměrně naplánováno: ' + action.planned}}")
+
+				.bar
+					.bar-content.current(ng-style="{width: getWidth(action.current)}", bs-tooltip, data-title="{{'Průměrně vykonáno: ' + action.current}}")
+				.bar
+					.bar-content.max(ng-style="{width: getWidth(action.max.value)}", bs-tooltip, data-title="{{'MAX: ' + action.max.value + ' - ' + action.max.user}}")
+			p.bar-labels
+				span.pull-left 0
+				span {{round($parent.maxViewValue / 2)}}
+				span.pull-right {{$parent.maxViewValue}}
+	div.top(ng-show="!hideView")
+		h2 Top 10
+		.form-row
+			.full-field
+				label Pro aktivitu
+				button.select(ng-model="conditions.activity", bs-select, bs-options="action as action.label for action in activities", data-show-value="true", placeholder="Zvolte aktivitu")
+		div(ng-repeat="user in getTopTen()")
+			p {{($index+1) + ') '}}{{user.user}}

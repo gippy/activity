@@ -18,6 +18,9 @@ exports.authenticate = (req, res, next) ->
 	if password is config.password.admin
 		res.locals.loggedIn = 'admin'
 		next()
+	else if password is config.password.report
+		res.locals.loggedIn = 'report'
+		next()
 	else if config.password.users.indexOf(password) isnt -1
 		res.locals.loggedIn = 'user'
 		next()
@@ -26,13 +29,17 @@ exports.authenticate = (req, res, next) ->
 
 exports.login = (req, res, next) -> res.render 'login'
 exports.dashboard = (req, res, next) ->
-	res.render 'dashboard', {passwords: if res.locals.loggedIn is 'admin' then config.password.users else []}
+	res.render 'dashboard', {passwords: if res.locals.loggedIn is 'admin' or res.locals.loggedIn is 'report' then config.password.users else []}
 
 exports.performLogin = (req, res, next) ->
 	password = req.body.password
 	if password is config.password.admin
 		req.session.password = password
 		res.locals.loggedIn = 'admin'
+		res.redirect '/dashboard'
+	else if password is config.password.report
+		req.session.password = password
+		res.locals.loggedIn = 'report'
 		res.redirect '/dashboard'
 	else if config.password.users.indexOf(password) isnt -1
 		req.session.password = password
@@ -47,36 +54,39 @@ exports.logout = (req, res, next) ->
 	res.redirect '/login'
 
 exports.download = (req, res, next) ->
-	Activity
-		.find({password: req.query.pass}, 'region unit position name week date dayOfWeek planned current action')
-		.sort({region: 1, unit: 1, name: 1, week: 1, date: 1, action: 1})
-		.exec (err, activities)->
-			if err
-				req.flash 'error', 'Nepodařilo získat data z databáze.'
-				res.redirect '/dashboard'
-			else
-				data = []
-				data.push ['region', 'jednotka', 'pozice', 'jméno', 'týden', 'den', 'den v týdnu', 'plán', 'aktuálně', 'akce']
-				for activity in activities
-					data.push [activity.region, activity.unit, activity.position, activity.name, activity.week, activity.date, activity.dayOfWeek, activity.planned, activity.current, activity.action]
+	if res.locals.loggedIn != 'admin' then res.redirect '/dashboard'
+	else
+		Activity
+			.find({password: req.query.pass}, 'region unit position name week date dayOfWeek planned current action')
+			.sort({region: 1, unit: 1, name: 1, week: 1, date: 1, action: 1})
+			.exec (err, activities)->
+				if err
+					req.flash 'error', 'Nepodařilo získat data z databáze.'
+					res.redirect '/dashboard'
+				else
+					data = []
+					data.push ['region', 'jednotka', 'pozice', 'jméno', 'týden', 'den', 'den v týdnu', 'plán', 'aktuálně', 'akce']
+					for activity in activities
+						data.push [activity.region, activity.unit, activity.position, activity.name, activity.week, activity.date, activity.dayOfWeek, activity.planned, activity.current, activity.action]
 
-				buffer = xlsx.build [{name: 'Záznamy', data: data}]
-				res.attachment('datasheet.xlsx');
-				res.type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-				return res.send buffer
+					buffer = xlsx.build [{name: 'Záznamy', data: data}]
+					res.attachment('datasheet.xlsx');
+					res.type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+					return res.send buffer
 
 parseName = (name, dot) ->
 	nameParts = name.substr(0, dot).split('_').filter (item) -> item.length > 0
-	type = nameParts.shift()
+	type = nameParts.shift().replace('Aktivity', '')
 	info = {
 		position: '',
 		name: '',
 		region: nameParts.shift(),
 		unit: ''
 	}
+	if type.length is 2 and type isnt 'AG' then info.position = type
 	if !info.position then info.position = 'FA'
 	unit = nameParts.shift()
-	info.unit = if unit is 999 then '' else unit
+	info.unit = if unit is '999' then '' else unit
 	info.name = nameParts.join(' ')
 
 	return info
@@ -108,8 +118,9 @@ parseDays = (actions, info, week, dates, data) ->
 			dayOfWeek: cell
 		}
 		count++
-		for row in data
+		for row, i in data
 			itemData = {}
+			itemData.row = i
 			itemData.region = info.region
 			itemData.unit = info.unit
 			itemData.position = info.position
@@ -141,8 +152,9 @@ parseWeeks = (actions, info, weeks, types, dates, data) ->
 			week: cell,
 			date: moment(dates[key] + '2016', "D.M.YYYY").format('YYYY-MM-DD'),
 		}
-		for row in data
+		for row, i in data
 			itemData = {}
+			itemData.row = i
 			itemData.region = info.region
 			itemData.unit = info.unit
 			itemData.position = info.position
@@ -193,6 +205,7 @@ parseData = (info, data) ->
 		else if sheet.data[0].length > 3 and sheet.data[0][4] != ''
 			if info.position is 'FA' and sheet.data[0].length > 6 and sheet.data[0][7] != '' then continue
 			else sheets.push sheet.data
+
 	result = parseSheets(info, actions, sheets)
 	return result
 
@@ -244,3 +257,179 @@ exports.upload = (req, res, next) ->
 					req.flash('success', 'Úspěšně uloženo.')
 					res.redirect('/dashboard')
 		)
+
+getRegions = (next) ->
+	Activity.distinct('region').exec (err, regions) ->
+		if err then next(err)
+		else
+			regions.sort()
+			async.map(
+				regions
+				(item, cb) ->
+					region = {region: item, label: item}
+					Activity.find({region: item}).distinct('unit').exec (err, units) ->
+						if err then callback(err)
+						else
+							units = units.sort().map (item) -> return {unit: item, label: item}
+							units = units.filter (item) -> return item.unit isnt ''
+							units.splice(0,0,{unit:null, label: 'Vše'})
+							region.units = units
+							cb(null, region)
+				next
+			)
+
+getPositions = (next) ->
+	Activity.distinct('position').exec (err, positions) ->
+		if err then next(err)
+		else
+			positions.sort()
+			async.map(
+				positions
+				(item, cb) ->
+					position = {position: item, label: item}
+					Activity.find({position: item}).distinct('action').exec (err, actions) ->
+						if err then callback(err)
+						else
+							actions.sort()
+							position.actions = actions
+							cb(null, position)
+				next
+			)
+
+getOptions = (next) ->
+	async.waterfall(
+		[
+			(cb) -> getRegions(cb)
+			(regions, cb) ->
+				getPositions (err, positions) ->
+					if err then cb(err)
+					else
+						data = {
+							regions: regions
+							positions: positions
+						}
+						cb(null, data)
+			(data, cb) ->
+				data.periods = [
+					{ label: 'Včera', value: 'today', position: 'FA' },
+					{ label: 'Tento týden', value: 'week', position: null },
+					{ label: 'Minulý týden', value: 'last-week', position: null },
+					{ label: 'Tento měsíc', value: 'month', position: null },
+					{ label: 'Minulý měsíc', value: 'last-month', position: null },
+				]
+				cb(null, data)
+		],
+		next
+	)
+
+getPeriod = (text, position) ->
+	if !text then text = 'today'
+	if text is 'today' and position isnt 'FA' then text = 'last-week'
+	now = moment()
+	period = {
+		from: null,
+		to: null
+	}
+	switch text
+		when "today"
+			period.from = now.clone().startOf('day').format('YYYY-MM-DD')
+			period.to = now.clone().endOf('day').format('YYYY-MM-DD')
+		when "week"
+			period.from = now.clone().startOf('isoWeek').format('YYYY-MM-DD')
+			period.to = now.clone().endOf('isoWeek').format('YYYY-MM-DD')
+		when "last-week"
+			period.from = now.clone().startOf('isoWeek').subtract(7, 'd').format('YYYY-MM-DD')
+			period.to = now.clone().endOf('isoWeek').subtract(7, 'd').format('YYYY-MM-DD')
+		when "month"
+			period.from = now.clone().startOf('month').format('YYYY-MM-DD')
+			period.to = now.clone().endOf('month').format('YYYY-MM-DD')
+		else
+			period.from = now.clone().startOf('month').subtract(1, 'M').format('YYYY-MM-DD')
+			period.to = now.clone().endOf('month').subtract(1, 'M').format('YYYY-MM-DD')
+	return period
+
+getDateQuery = (from, to) ->
+	now = moment()
+	if !from then from = now.clone().startOf('isoWeek').format('YYYY-MM-DD')
+	if !to then to = now.clone().endOf('isoWeek').format('YYYY-MM-DD')
+	return { from: from, to: to }
+
+exports.getData = (req, res, next) ->
+	if res.locals.loggedIn != 'report' then res.json {}
+	else
+		getOptions (err, options) ->
+			if err
+				console.log err
+				res.json {options: {}, data: {users: [], actions: []}}
+			else
+				position = req.query.position
+				conditions = {
+					password: req.query.pass
+				}
+
+				if position then conditions.position = position
+				if req.query.region and req.query.region isnt 'null' then conditions.region = req.query.region
+				if req.query.unit and req.query.unit isnt 'null'  then conditions.unit = req.query.unit
+
+				dateQuery = getDateQuery(req.query.from, req.query.to)
+				conditions.date = {$gte: dateQuery.from, $lte: dateQuery.to}
+
+				Activity.find(conditions).sort({position: 1, row: 1}).exec (err, activities) ->
+					if err
+						console.log err
+						res.json {options: options, data: {users: {}, actions: {}}}
+					else
+						users = {}
+						actions = {}
+						for activity in activities
+							user = activity.name
+							action = activity.action
+
+							if !users.hasOwnProperty(user) then users[user] = 0
+							if !actions.hasOwnProperty(action) then actions[action] = {current: 0, planned: 0, max: {value: 0, user: null}, count: 0, users: {}}
+							if !actions[action].users.hasOwnProperty(user) then actions[action].users[user] = 0
+
+							if !activity.planned then activity.planned = 0
+							if !activity.current then activity.current = 0
+
+							users[user] += activity.current
+
+							actions[action].current += activity.current
+							actions[action].planned += activity.planned
+							actions[action].count++
+
+							actions[action].users[user] += activity.current
+
+							if activity.current > actions[action].max.value then actions[action].max = {user: user, value: activity.current}
+
+						realUsers = []
+						realUsers.push {user: user, count: count} for user, count of users
+						realUsers.sort (a, b) -> if a.count < b.count then 1 else if a.count > b.count then -1 else 0
+
+						realActions = []
+						for label, data of actions
+							realActionUsers = []
+							realActionUsers.push {user: user, count: count} for user, count of data.users
+							realActionUsers.sort (a, b) -> if a.count < b.count then 1 else if a.count > b.count then -1 else 0
+
+							realActions.push {
+								label: label
+								current: Math.round(data.current/data.count)
+								planned: Math.round(data.planned/data.count)
+								max: data.max,
+								users: realActionUsers.splice(0,10)
+							}
+
+						res.json {
+							options: options,
+							defaultFrom: dateQuery.from
+							defaultTo: dateQuery.to
+							data: {
+								users: realUsers,
+								actions: realActions
+							}
+						}
+
+exports.report = (req, res, next) ->
+	if res.locals.loggedIn != 'report' then res.redirect '/dashboard'
+	else res.render 'reports'

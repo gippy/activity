@@ -24,6 +24,8 @@ module.exports = function ( app ) {
 
 	app.get( '/', index.dashboard );
 	app.get( '/dashboard', index.dashboard );
+	app.get( '/report', index.report );
+	app.get( '/report-data', index.getData );
 	app.post( '/upload', upload.array('files'), index.upload);
 	app.get( '/download', index.download);
 
