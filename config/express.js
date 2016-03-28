@@ -68,8 +68,8 @@ module.exports = function (app, config, env) {
 				error: err
 			});
 		});
-		app.locals.javascript = '/javascripts/scripts.js';
-		app.locals.stylesheet = '/stylesheets/style.css';
+		app.locals.javascript = './javascripts/scripts.js';
+		app.locals.stylesheet = './stylesheets/style.css';
 	} else {
 
 		app.use(function (err, req, res, next) {
@@ -81,7 +81,7 @@ module.exports = function (app, config, env) {
 			});
 		});
 
-		app.locals.javascript = '/javascripts/scripts.js';
-		app.locals.stylesheet = '/stylesheets/style.min.css';
+		app.locals.javascript = './javascripts/scripts.js';
+		app.locals.stylesheet = './stylesheets/style.min.css';
 	}
 };

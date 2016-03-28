@@ -71,7 +71,7 @@ app.controller('ViewController', function($scope, $http){
 	};
 
 	$scope.getData = function () {
-		$http.get('/report-data'+window.location.search + getQuery()).success(function(response){
+		$http.get('./report-data'+window.location.search + getQuery()).success(function(response){
 			$scope.maxViewValue = 0;
 			$scope.options = response.options;
 			response.options.positions.splice(0,0, {position: null, label: "Vše"});
