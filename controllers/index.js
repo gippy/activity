@@ -1,4 +1,4 @@
-var Activity, async, config, env, fs, getDateQuery, getOptions, getPositions, getRegions, moment, mongoose, parseActions, parseData, parseDays, parseFile, parseName, parseSheets, parseWeeks, saveFiles, xlsx;
+var Activity, async, config, env, fs, getDateQuery, getOptions, getPositions, getRandom, getRegions, moment, mongoose, parseActions, parseData, parseDays, parseFile, parseName, parseSheets, parseSummary, parseWeeks, saveFiles, xlsx;
 
 env = process.env.NODE_ENV || 'development';
 
@@ -16,26 +16,49 @@ mongoose = require('mongoose');
 
 Activity = mongoose.model('Activity');
 
+exports.accessDenied = function(req, res, next) {
+  console.error('Denied access to address:' + req.ip);
+  res.locals.hideScripts = true;
+  return res.render('access-denied');
+};
+
+exports.checkIP = function(req, res, next) {
+  if (config.ips.indexOf(req.ip) === -1) {
+    return res.redirect('./access-denied');
+  } else {
+    return next();
+  }
+};
+
 exports.setLocals = function(req, res, next) {
   res.locals.loggedIn = false;
+  res.locals.hideScripts = false;
   return next();
 };
 
 exports.authenticate = function(req, res, next) {
-  var password;
+  var j, len, password, ref, user;
   password = req.session.password;
-  if (password === config.password.admin) {
-    res.locals.loggedIn = 'admin';
-    return next();
-  } else if (password === config.password.report) {
-    res.locals.loggedIn = 'report';
-    return next();
-  } else if (config.password.users.indexOf(password) !== -1) {
+  if (config.databases.indexOf(password) !== -1) {
     res.locals.loggedIn = 'user';
+    res.locals.databases = [password];
     return next();
   } else {
-    return res.redirect('login');
+    ref = config.users;
+    for (j = 0, len = ref.length; j < len; j++) {
+      user = ref[j];
+      if (password === user.admin) {
+        res.locals.loggedIn = 'admin';
+        res.locals.databases = user.databases;
+        return next();
+      } else if (password === user.report) {
+        res.locals.loggedIn = 'report';
+        res.locals.databases = user.databases;
+        return next();
+      }
+    }
   }
+  return res.redirect('login');
 };
 
 exports.login = function(req, res, next) {
@@ -43,40 +66,52 @@ exports.login = function(req, res, next) {
 };
 
 exports.dashboard = function(req, res, next) {
-  return res.render('dashboard', {
-    passwords: res.locals.loggedIn === 'admin' || res.locals.loggedIn === 'report' ? config.password.users : []
-  });
+  if (res.locals.databases.length === 1 && res.locals.loggedIn === 'report') {
+    return res.redirect('./report?pass=' + res.locals.databases[0]);
+  } else {
+    return res.render('dashboard', {
+      passwords: res.locals.loggedIn === 'admin' || res.locals.loggedIn === 'report' ? res.locals.databases : void 0
+    });
+  }
 };
 
 exports.performLogin = function(req, res, next) {
-  var password;
+  var j, len, password, ref, user;
   password = req.body.password;
-  if (password === config.password.admin) {
-    req.session.password = password;
-    res.locals.loggedIn = 'admin';
-    return res.redirect('/dashboard');
-  } else if (password === config.password.report) {
-    req.session.password = password;
-    res.locals.loggedIn = 'report';
-    return res.redirect('/dashboard');
-  } else if (config.password.users.indexOf(password) !== -1) {
-    req.session.password = password;
+  if (config.databases.indexOf(password) !== -1) {
     res.locals.loggedIn = 'user';
-    return res.redirect('/dashboard');
+    res.locals.databases = [password];
+    req.session.password = password;
+    return res.redirect('./dashboard');
   } else {
-    req.flash('error', 'Neplatné heslo!');
-    return res.redirect('/login');
+    ref = config.users;
+    for (j = 0, len = ref.length; j < len; j++) {
+      user = ref[j];
+      if (password === user.admin) {
+        res.locals.loggedIn = 'admin';
+        res.locals.databases = user.databases;
+        req.session.password = password;
+        return res.redirect('./dashboard');
+      } else if (password === user.report) {
+        res.locals.loggedIn = 'report';
+        res.locals.databases = user.databases;
+        req.session.password = password;
+        return res.redirect('./dashboard');
+      }
+    }
   }
+  req.flash('error', 'Neplatné heslo!');
+  return res.redirect('./login');
 };
 
 exports.logout = function(req, res, next) {
   req.session.destroy();
-  return res.redirect('/login');
+  return res.redirect('./login');
 };
 
 exports.download = function(req, res, next) {
   if (res.locals.loggedIn !== 'admin') {
-    return res.redirect('/dashboard');
+    return res.redirect('./dashboard');
   } else {
     return Activity.find({
       password: req.query.pass
@@ -91,7 +126,7 @@ exports.download = function(req, res, next) {
       var activity, buffer, data, j, len;
       if (err) {
         req.flash('error', 'Nepodařilo získat data z databáze.');
-        return res.redirect('/dashboard');
+        return res.redirect('./dashboard');
       } else {
         data = [];
         data.push(['region', 'jednotka', 'pozice', 'jméno', 'týden', 'den', 'den v týdnu', 'plán', 'aktuálně', 'akce']);
@@ -158,7 +193,54 @@ parseActions = function(actions) {
   return result;
 };
 
-parseDays = function(actions, info, week, dates, data) {
+parseSummary = function(info, data, pass) {
+  var cell, i, itemData, j, k, key, len, len1, realWeekData, ref, ref1, row, week;
+  realWeekData = [];
+  ref = data.summary.weeks;
+  for (key = j = 0, len = ref.length; j < len; key = ++j) {
+    cell = ref[key];
+    if (!(key > 3 && cell)) {
+      continue;
+    }
+    week = {
+      week: cell,
+      date: data.dates[cell]
+    };
+    ref1 = data.summary.sheet;
+    for (i = k = 0, len1 = ref1.length; k < len1; i = ++k) {
+      row = ref1[i];
+      if (!(row.length && row[0] && row[0].length)) {
+        continue;
+      }
+      itemData = {};
+      itemData.password = pass;
+      itemData.row = i;
+      itemData.region = info.region;
+      itemData.unit = info.unit;
+      itemData.position = info.position;
+      itemData.name = info.name;
+      itemData.week = week.week;
+      itemData.date = week.date;
+      itemData.dayOfWeek = 'Po';
+      itemData.planned = row.length >= key && row[key] ? row[key] : 0;
+      itemData.current = row.length > key && row[key + 1] ? row[key + 1] : 0;
+      itemData.action = row[0];
+      realWeekData.push(itemData);
+    }
+  }
+  realWeekData.sort(function(a, b) {
+    if (a[4] > b[4]) {
+      return -1;
+    } else if (a[4] < b[4]) {
+      return 1;
+    } else {
+      return 0;
+    }
+  });
+  return realWeekData;
+};
+
+parseDays = function(actions, info, week, dates, data, pass) {
   var action, cell, count, day, firstDay, i, itemData, j, k, key, len, len1, realData, row;
   realData = [];
   firstDay = moment(dates[2] + '2016', "D.M.YYYY");
@@ -176,7 +258,11 @@ parseDays = function(actions, info, week, dates, data) {
     count++;
     for (i = k = 0, len1 = data.length; k < len1; i = ++k) {
       row = data[i];
+      if (!(row.length && row[0] && row[0].length)) {
+        continue;
+      }
       itemData = {};
+      itemData.password = pass;
       itemData.row = i;
       itemData.region = info.region;
       itemData.unit = info.unit;
@@ -211,7 +297,7 @@ parseDays = function(actions, info, week, dates, data) {
   return realData;
 };
 
-parseWeeks = function(actions, info, weeks, types, dates, data) {
+parseWeeks = function(actions, info, weeks, types, dates, data, pass) {
   var action, cell, i, itemData, j, k, key, len, len1, realWeekData, row, week;
   realWeekData = [];
   for (key = j = 0, len = weeks.length; j < len; key = ++j) {
@@ -225,7 +311,11 @@ parseWeeks = function(actions, info, weeks, types, dates, data) {
     };
     for (i = k = 0, len1 = data.length; k < len1; i = ++k) {
       row = data[i];
+      if (!(row.length && row[0] && row[0].length)) {
+        continue;
+      }
       itemData = {};
+      itemData.password = pass;
       itemData.row = i;
       itemData.region = info.region;
       itemData.unit = info.unit;
@@ -260,25 +350,42 @@ parseWeeks = function(actions, info, weeks, types, dates, data) {
   return realWeekData;
 };
 
-parseSheets = function(info, actions, sheets) {
-  var data, dates, i, j, k, len, ref, rows, sheet, types, usefulRows, weeks;
+parseSheets = function(info, actions, sheets, pass) {
+  var agentData, data, dates, j, k, len, len1, sheet, types, weeks;
   data = [];
-  rows = Object.keys(actions).length;
-  for (j = 0, len = sheets.length; j < len; j++) {
-    sheet = sheets[j];
-    weeks = sheet.shift();
-    dates = sheet.shift();
-    types = sheet.shift();
-    usefulRows = [];
-    for (i = k = 0, ref = rows - 1; 0 <= ref ? k < ref : k > ref; i = 0 <= ref ? ++k : --k) {
-      usefulRows.push(sheet[i]);
+  if (info.position === 'FA') {
+    agentData = {
+      summary: [],
+      dates: {}
+    };
+    for (j = 0, len = sheets.length; j < len; j++) {
+      sheet = sheets[j];
+      weeks = sheet.shift();
+      dates = sheet.shift();
+      types = sheet.shift();
+      if (weeks.length > 5 && weeks[4]) {
+        agentData.summary = {
+          weeks: weeks,
+          sheet: sheet
+        };
+      } else if (dates.length > 3 && weeks.length > 3) {
+        agentData.dates[weeks[3]] = moment(dates[2] + '2016', "D.M.YYYY").format('YYYY-MM-DD');
+      }
     }
-    data = data.concat(info.position === 'FA' ? parseDays(actions, info, weeks[3], dates, usefulRows) : parseWeeks(actions, info, weeks, dates, types, usefulRows));
+    data.push(parseSummary(info, agentData, pass));
+  } else {
+    for (k = 0, len1 = sheets.length; k < len1; k++) {
+      sheet = sheets[k];
+      weeks = sheet.shift();
+      dates = sheet.shift();
+      types = sheet.shift();
+    }
+    data.push(parseWeeks(actions, info, weeks, dates, types, sheet, pass));
   }
   return data;
 };
 
-parseData = function(info, data) {
+parseData = function(info, data, pass) {
   var actions, j, len, result, sheet, sheets;
   actions = {};
   sheets = [];
@@ -292,18 +399,14 @@ parseData = function(info, data) {
     if (sheet.name === 'Aktivity_' + info.position) {
       actions = parseActions(sheet.data);
     } else if (sheet.data[0].length > 3 && sheet.data[0][4] !== '') {
-      if (info.position === 'FA' && sheet.data[0].length > 6 && sheet.data[0][7] !== '') {
-        continue;
-      } else {
-        sheets.push(sheet.data);
-      }
+      sheets.push(sheet.data);
     }
   }
-  result = parseSheets(info, actions, sheets);
+  result = parseSheets(info, actions, sheets, pass);
   return result;
 };
 
-parseFile = function(file, next) {
+parseFile = function(file, pass, next) {
   var data, dot, info;
   dot = file.originalname.indexOf('.xlsx');
   if (dot === -1) {
@@ -313,7 +416,7 @@ parseFile = function(file, next) {
     return next('Soubor ' + file.originalname + ' není excelový soubor.');
   } else {
     info = parseName(file.originalname, dot);
-    data = parseData(info, xlsx.parse(file.path));
+    data = parseData(info, xlsx.parse(fs.readFileSync(file.path)), pass);
     fs.unlinkSync(file.path);
     return next(null, data);
   }
@@ -321,9 +424,26 @@ parseFile = function(file, next) {
 
 saveFiles = function(req, data, next) {
   return async.each(data, function(file, cb) {
-    return async.each(file, function(item, callback) {
-      item.password = req.session.password;
-      return Activity.updateOrCreate(item, callback);
+    return async.each(file, function(sheet, callback) {
+      var conditions;
+      if (sheet.length && sheet[0].week >= 0) {
+        conditions = {
+          position: sheet[0].position,
+          region: sheet[0].region,
+          unit: sheet[0].unit,
+          name: sheet[0].name,
+          week: sheet[0].week
+        };
+        return Activity.remove(conditions, function(err) {
+          if (err) {
+            return cb(err);
+          } else {
+            return Activity.create(sheet, callback);
+          }
+        });
+      } else {
+        return cb(null, []);
+      }
     }, cb);
   }, next);
 };
@@ -331,12 +451,12 @@ saveFiles = function(req, data, next) {
 exports.upload = function(req, res, next) {
   if (!req.files || !req.files.length) {
     req.flash('error', 'Nebyla přijata data');
-    return res.redirect('/dashboard');
+    return res.redirect('./dashboard');
   } else {
     return async.waterfall([
       function(callback) {
         return async.mapSeries(req.files, function(file, cb) {
-          return parseFile(file, cb);
+          return parseFile(file, req.session.password, cb);
         }, callback);
       }, function(files, callback) {
         return saveFiles(req, files, callback);
@@ -344,10 +464,10 @@ exports.upload = function(req, res, next) {
     ], function(err, data) {
       if (err) {
         req.flash('error', err);
-        return res.redirect('/dashboard');
+        return res.redirect('./dashboard');
       } else {
         req.flash('success', 'Úspěšně uloženo.');
-        return res.redirect('/dashboard');
+        return res.redirect('./dashboard');
       }
     });
   }
@@ -658,8 +778,61 @@ exports.getData = function(req, res, next) {
 
 exports.report = function(req, res, next) {
   if (res.locals.loggedIn !== 'report') {
-    return res.redirect('/dashboard');
+    return res.redirect('./dashboard');
   } else {
     return res.render('reports');
   }
+};
+
+getRandom = function(length, next) {
+  return require('crypto').randomBytes(length, function(ex, buf) {
+    var token;
+    token = buf.toString('hex');
+    return next(token);
+  });
+};
+
+exports.hash = function(req, res, next) {
+  return getRandom(4, function(newPass) {
+    return Activity.find({
+      password: req.query.password
+    }).distinct('name').exec(function(err, data) {
+      if (err) {
+        return next(err);
+      } else {
+        return async.forEachOf(data, function(name, key, cb) {
+          return Activity.find({
+            password: req.query.password
+          }, function(err, items) {
+            var newItems;
+            if (err) {
+              return cb(err);
+            } else {
+              newItems = items.map(function(item) {
+                item = item.toObject();
+                delete item.id;
+                delete item._id;
+                item.password = newPass;
+                item.name = 'TEST_X_' + count;
+                return item;
+              });
+              return Activity.create(newItems, function(err) {
+                if (err) {
+                  return cb(err);
+                } else {
+                  return cb();
+                }
+              });
+            }
+          });
+        }, function(err) {
+          if (err) {
+            return next(err);
+          } else {
+            return res.redirect('./dashboard');
+          }
+        });
+      }
+    });
+  });
 };

@@ -2,7 +2,8 @@ var app = angular.module('ActivityApp', ['mgcrea.ngStrap']);
 
 app.config(function($selectProvider) {
 	angular.extend($selectProvider.defaults, {
-		animation: 'am-flip-x'
+		animation: 'am-flip-x',
+		position: 'bottom auto'
 	});
 });
 
@@ -24,10 +25,10 @@ app.config(function($datepickerProvider) {
 });
 
 app.controller('BaseController', function($scope){
-	$scope.maxViewValue = 0
 });
 
 app.controller('ViewController', function($scope, $http){
+	$scope.maxViewValue = 0;
 	$scope.conditions = {
 		position: '',
 		from: '',
@@ -41,7 +42,7 @@ app.controller('ViewController', function($scope, $http){
 	$scope.activities = [];
 
 	$scope.getWidth = function(count){
-		return Math.round(count * 100 / $scope.$parent.maxViewValue) + '%';
+		return Math.round(count * 100 / $scope.maxViewValue) + '%';
 	};
 
 	$scope.getFilters = function() {
@@ -71,6 +72,7 @@ app.controller('ViewController', function($scope, $http){
 
 	$scope.getData = function () {
 		$http.get('/report-data'+window.location.search + getQuery()).success(function(response){
+			$scope.maxViewValue = 0;
 			$scope.options = response.options;
 			response.options.positions.splice(0,0, {position: null, label: "Vše"});
 			response.options.regions.splice(0,0, {region: null, label: "Vše"});
@@ -80,12 +82,13 @@ app.controller('ViewController', function($scope, $http){
 
 			$scope.users = response.data.users.splice(0,10);
 			$scope.actions = response.data.actions;
-			var i, action,  max;
+			var i, action,  max, maxValue;
 			for (i in $scope.actions){
 				if (!$scope.actions.hasOwnProperty(i)) continue;
 				action = $scope.actions[i];
-				if (action.max.value > $scope.$parent.maxViewValue) $scope.$parent.maxViewValue = action.max.value;
-				max = $scope.$parent.maxViewValue;
+				maxValue = Math.max(action.current, action.planned, action.max.value);
+				if (maxValue > $scope.maxViewValue) $scope.maxViewValue = maxValue;
+				max = $scope.maxViewValue;
 			}
 			$scope.activities = response.data.actions.map(function(item){
 				return {
@@ -94,7 +97,7 @@ app.controller('ViewController', function($scope, $http){
 				}
 			});
 			$scope.activities.splice(0,0,{label: 'Vše'});
-			$scope.showFilters = false
+			$scope.showFilters = false;
 		});
 	};
 	$scope.getData();

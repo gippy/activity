@@ -9,52 +9,74 @@ async = require 'async'
 mongoose = require 'mongoose'
 Activity = mongoose.model 'Activity'
 
+exports.accessDenied = (req, res, next) ->
+	console.error('Denied access to address:' + req.ip)
+	res.locals.hideScripts = true
+	res.render 'access-denied'
+
+exports.checkIP = (req,res, next) ->
+	if config.ips.indexOf(req.ip) is -1 then res.redirect('./access-denied')
+	else next()
+
 exports.setLocals = (req, res, next) ->
 	res.locals.loggedIn = false
+	res.locals.hideScripts = false
 	next()
 
 exports.authenticate = (req, res, next) ->
 	password = req.session.password
-	if password is config.password.admin
-		res.locals.loggedIn = 'admin'
-		next()
-	else if password is config.password.report
-		res.locals.loggedIn = 'report'
-		next()
-	else if config.password.users.indexOf(password) isnt -1
+	if config.databases.indexOf(password) isnt -1
 		res.locals.loggedIn = 'user'
-		next()
+		res.locals.databases = [password]
+		return next()
 	else
-		res.redirect 'login'
+		for user in config.users
+			if password is user.admin
+				res.locals.loggedIn = 'admin'
+				res.locals.databases = user.databases
+				return next()
+			else if password is user.report
+				res.locals.loggedIn = 'report'
+				res.locals.databases = user.databases
+				return next()
+	res.redirect 'login'
 
 exports.login = (req, res, next) -> res.render 'login'
 exports.dashboard = (req, res, next) ->
-	res.render 'dashboard', {passwords: if res.locals.loggedIn is 'admin' or res.locals.loggedIn is 'report' then config.password.users else []}
+	if res.locals.databases.length is 1 and res.locals.loggedIn is 'report'
+		res.redirect './report?pass='+res.locals.databases[0]
+	else
+		res.render 'dashboard', {passwords: if res.locals.loggedIn is 'admin' or res.locals.loggedIn is 'report' then res.locals.databases}
 
 exports.performLogin = (req, res, next) ->
 	password = req.body.password
-	if password is config.password.admin
-		req.session.password = password
-		res.locals.loggedIn = 'admin'
-		res.redirect '/dashboard'
-	else if password is config.password.report
-		req.session.password = password
-		res.locals.loggedIn = 'report'
-		res.redirect '/dashboard'
-	else if config.password.users.indexOf(password) isnt -1
-		req.session.password = password
+	if config.databases.indexOf(password) isnt -1
 		res.locals.loggedIn = 'user'
-		res.redirect '/dashboard'
+		res.locals.databases = [password]
+		req.session.password = password
+		return res.redirect './dashboard'
 	else
-		req.flash('error', 'Neplatné heslo!')
-		res.redirect '/login'
+		for user in config.users
+			if password is user.admin
+				res.locals.loggedIn = 'admin'
+				res.locals.databases = user.databases
+				req.session.password = password
+				return res.redirect './dashboard'
+			else if password is user.report
+				res.locals.loggedIn = 'report'
+				res.locals.databases = user.databases
+				req.session.password = password
+				return res.redirect './dashboard'
+
+	req.flash('error', 'Neplatné heslo!')
+	res.redirect './login'
 
 exports.logout = (req, res, next) ->
 	req.session.destroy();
-	res.redirect '/login'
+	res.redirect './login'
 
 exports.download = (req, res, next) ->
-	if res.locals.loggedIn != 'admin' then res.redirect '/dashboard'
+	if res.locals.loggedIn != 'admin' then res.redirect './dashboard'
 	else
 		Activity
 			.find({password: req.query.pass}, 'region unit position name week date dayOfWeek planned current action')
@@ -62,7 +84,7 @@ exports.download = (req, res, next) ->
 			.exec (err, activities)->
 				if err
 					req.flash 'error', 'Nepodařilo získat data z databáze.'
-					res.redirect '/dashboard'
+					res.redirect './dashboard'
 				else
 					data = []
 					data.push ['region', 'jednotka', 'pozice', 'jméno', 'týden', 'den', 'den v týdnu', 'plán', 'aktuálně', 'akce']
@@ -107,7 +129,36 @@ parseActions = (actions) ->
 			result[action[1]] = item
 	return result
 
-parseDays = (actions, info, week, dates, data) ->
+parseSummary = (info, data, pass) ->
+	realWeekData = []
+	for cell, key in data.summary.weeks when key > 3 and cell
+		week = {
+			week: cell,
+			date: data.dates[cell]
+		}
+		for row, i in data.summary.sheet when row.length and row[0] and row[0].length
+			itemData = {}
+			itemData.password = pass
+			itemData.row = i
+			itemData.region = info.region
+			itemData.unit = info.unit
+			itemData.position = info.position
+			itemData.name = info.name
+			itemData.week = week.week
+			itemData.date = week.date
+			itemData.dayOfWeek = 'Po'
+			itemData.planned = if row.length >= key and row[key] then row[key] else 0
+			itemData.current = if row.length > key and row[key+1] then row[key+1] else 0
+			itemData.action = row[0]
+			realWeekData.push(itemData)
+
+	realWeekData.sort (a, b) ->
+		if a[4] > b[4] then return -1
+		else if a[4] < b[4] then return 1
+		else return 0
+	return realWeekData
+
+parseDays = (actions, info, week, dates, data, pass) ->
 	realData = []
 	firstDay = moment(dates[2] + '2016', "D.M.YYYY")
 	count = 0
@@ -118,8 +169,9 @@ parseDays = (actions, info, week, dates, data) ->
 			dayOfWeek: cell
 		}
 		count++
-		for row, i in data
+		for row, i in data when row.length and row[0] and row[0].length
 			itemData = {}
+			itemData.password = pass
 			itemData.row = i
 			itemData.region = info.region
 			itemData.unit = info.unit
@@ -145,15 +197,16 @@ parseDays = (actions, info, week, dates, data) ->
 		else return 0
 	return realData
 
-parseWeeks = (actions, info, weeks, types, dates, data) ->
+parseWeeks = (actions, info, weeks, types, dates, data, pass) ->
 	realWeekData = []
 	for cell, key in weeks when key > 3 and cell
 		week = {
 			week: cell,
 			date: moment(dates[key] + '2016', "D.M.YYYY").format('YYYY-MM-DD'),
 		}
-		for row, i in data
+		for row, i in data when row.length and row[0] and row[0].length
 			itemData = {}
+			itemData.password = pass
 			itemData.row = i
 			itemData.region = info.region
 			itemData.unit = info.unit
@@ -180,22 +233,31 @@ parseWeeks = (actions, info, weeks, types, dates, data) ->
 		else return 0
 	return realWeekData
 
-parseSheets = (info, actions, sheets) ->
+parseSheets = (info, actions, sheets, pass) ->
 	data = []
-	rows = Object.keys(actions).length
-	for sheet in sheets
-		weeks = sheet.shift()
-		dates = sheet.shift()
-		types = sheet.shift()
-		usefulRows = []
-		for i in [0...rows-1]
-			usefulRows.push sheet[i]
 
-		data = data.concat if info.position is 'FA' then parseDays(actions, info, weeks[3], dates, usefulRows) else parseWeeks(actions, info, weeks, dates, types, usefulRows)
+	if info.position is 'FA'
+		agentData = {
+			summary: []
+			dates: {}
+		}
+		for sheet in sheets
+			weeks = sheet.shift()
+			dates = sheet.shift()
+			types = sheet.shift()
+			if weeks.length > 5 and weeks[4] then agentData.summary = {weeks: weeks, sheet: sheet}
+			else if dates.length > 3 and weeks.length > 3 then agentData.dates[weeks[3]] = moment(dates[2] + '2016', "D.M.YYYY").format('YYYY-MM-DD')
+		data.push(parseSummary(info, agentData, pass))
+	else
+		for sheet in sheets
+			weeks = sheet.shift()
+			dates = sheet.shift()
+			types = sheet.shift()
+		data.push(parseWeeks(actions, info, weeks, dates, types, sheet, pass))
 
 	return data
 
-parseData = (info, data) ->
+parseData = (info, data, pass) ->
 	actions= {}
 	sheets = []
 	result = []
@@ -203,20 +265,19 @@ parseData = (info, data) ->
 		sheet.name = sheet.name.replace(' POPIS', '')
 		if sheet.name is 'Aktivity_'+info.position then actions = parseActions(sheet.data)
 		else if sheet.data[0].length > 3 and sheet.data[0][4] != ''
-			if info.position is 'FA' and sheet.data[0].length > 6 and sheet.data[0][7] != '' then continue
-			else sheets.push sheet.data
+			sheets.push sheet.data
 
-	result = parseSheets(info, actions, sheets)
+	result = parseSheets(info, actions, sheets, pass)
 	return result
 
-parseFile = (file, next) ->
+parseFile = (file, pass, next) ->
 	dot = file.originalname.indexOf('.xlsx')
 	if dot is -1 then dot = file.originalname.indexOf('.xls')
 
 	if dot is -1 then next('Soubor ' + file.originalname + ' není excelový soubor.')
 	else
 		info = parseName(file.originalname, dot)
-		data = parseData(info, xlsx.parse file.path)
+		data = parseData(info, xlsx.parse(fs.readFileSync(file.path)), pass)
 		fs.unlinkSync(file.path)
 		next(null, data)
 
@@ -226,9 +287,19 @@ saveFiles = (req, data, next) ->
 		(file, cb) ->
 			async.each(
 				file,
-				(item, callback) ->
-					item.password = req.session.password
-					Activity.updateOrCreate item, callback
+				(sheet, callback) ->
+					if sheet.length and sheet[0].week >= 0
+						conditions = {
+							position: sheet[0].position,
+							region: sheet[0].region,
+							unit: sheet[0].unit,
+							name: sheet[0].name,
+							week: sheet[0].week
+						}
+						Activity.remove conditions, (err) ->
+							if err then cb(err)
+							else Activity.create sheet, callback
+					else cb(null, [])
 				cb
 			)
 		next
@@ -237,14 +308,14 @@ saveFiles = (req, data, next) ->
 exports.upload = (req, res, next) ->
 	if !req.files or !req.files.length
 		req.flash('error', 'Nebyla přijata data')
-		res.redirect('/dashboard')
+		res.redirect('./dashboard')
 	else
 		async.waterfall(
 			[
 				(callback) ->
 					async.mapSeries(
 						req.files
-						(file, cb) ->	parseFile(file, cb)
+						(file, cb) ->	parseFile(file, req.session.password, cb)
 						callback
 					)
 				(files, callback) -> saveFiles(req, files, callback)
@@ -252,10 +323,10 @@ exports.upload = (req, res, next) ->
 			(err, data) ->
 				if err
 					req.flash('error', err)
-					res.redirect('/dashboard')
+					res.redirect('./dashboard')
 				else
 					req.flash('success', 'Úspěšně uloženo.')
-					res.redirect('/dashboard')
+					res.redirect('./dashboard')
 		)
 
 getRegions = (next) ->
@@ -424,5 +495,38 @@ exports.getData = (req, res, next) ->
 						}
 
 exports.report = (req, res, next) ->
-	if res.locals.loggedIn != 'report' then res.redirect '/dashboard'
+	if res.locals.loggedIn != 'report' then res.redirect './dashboard'
 	else res.render 'reports'
+
+getRandom = (length, next) -> require('crypto').randomBytes length, (ex, buf) ->
+	token = buf.toString('hex')
+	next(token)
+
+exports.hash = (req, res, next) ->
+	getRandom 4, (newPass) ->
+		Activity.find({password: req.query.password}).distinct('name').exec (err, data) ->
+			if err then next(err)
+			else
+				async.forEachOf(
+					data,
+					(name, key, cb) ->
+						Activity.find {password:req.query.password}, (err, items) ->
+							if err then cb(err)
+							else
+								newItems = items.map (item) ->
+									item = item.toObject()
+									delete item.id
+									delete item._id
+									item.password = newPass
+									item.name = 'TEST_X_' + count
+									return item
+
+
+								Activity.create newItems, (err) ->
+									if err then cb(err)
+									else cb()
+
+					(err) ->
+						if err then next(err)
+						else res.redirect('./dashboard')
+				)

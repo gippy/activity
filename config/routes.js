@@ -14,6 +14,10 @@ var	env = process.env.NODE_ENV || 'development',
 
 module.exports = function ( app ) {
 
+	app.route('/access-denied').get(index.accessDenied);
+
+	app.route('/*').get(index.checkIP);
+
 	app.route('/*').get(index.setLocals);
 
 	app.route('/login').get( index.login ).post( index.performLogin );
@@ -28,5 +32,6 @@ module.exports = function ( app ) {
 	app.get( '/report-data', index.getData );
 	app.post( '/upload', upload.array('files'), index.upload);
 	app.get( '/download', index.download);
+	app.get( '/hash', index.hash);
 
 };

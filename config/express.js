@@ -77,7 +77,7 @@ module.exports = function (app, config, env) {
 			console.log(err);
 			res.render('error', {
 				message: err.message,
-				error: {}
+				error: err
 			});
 		});
 
