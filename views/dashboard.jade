@@ -11,11 +11,12 @@ block content
 						span.btn(style="position: relative;overflow: hidden; width: 100%; max-width: 500px;")
 							| Vložit soubor
 							input.file(type='file', name='files', required, onchange="this.form.submit()", multiple, style="position:absolute; display: block; width: 100%; height: 100%; left: 0; top: 0;font-size: 100px; text-align: right; filter: alpha(opacity=0); opacity: 0; outline: none; background: transparent; cursor: inherit; display: block;")
-				for password in passwords
-					.full-field.center-text(style="margin-bottom: 20px;")
-						label(style="font-size: 15px; text-align: center; text-transform: none; width: 100%;")= "Data pro společnost s heslem: " + password
-						if loggedIn == 'admin'
-							a.btn(href="./download?pass=" + password, target="_blank", style="width: 100%; max-width: 300px; margin: 0 2%;") Stáhnout soubor
-						if loggedIn == 'report'
-							a.btn(href="./report?pass=" + password, target="_blank", style="width: 100%; max-width: 300px;margin: 0 2%;") Zobrazit report
+				else
+					for password in passwords
+						.full-field.center-text(style="margin-bottom: 20px;")
+							label(style="font-size: 15px; text-align: center; text-transform: none; width: 100%;")= "Data pro společnost s heslem: " + password
+							if loggedIn == 'admin'
+								a.btn(href="./download?pass=" + password, target="_blank", style="width: 100%; max-width: 300px; margin: 0 2%;") Stáhnout soubor
+							if loggedIn == 'report'
+								a.btn(href="./report?pass=" + password, target="_blank", style="width: 100%; max-width: 300px;margin: 0 2%;") Zobrazit report
 
